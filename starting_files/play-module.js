@@ -1,43 +1,41 @@
 /* In this module, create three classes: Play, Act, and Scene. */
 
 class Play {
-  constructor() {
+  constructor(play) {
+    this.title = play.title;
     this.acts = [];
-  }
+    this.persona = [];
 
-  addAct() {
-    const newAct = new Act();
-    this.acts.push(newAct);
-  }
+    play.acts.forEach((act) => {
+      this.acts.push(new Act(act));
+    });
 
-  getActs() {
-    return this.acts;
+    play.persona.forEach((person) => {
+      this.persona.push(person);
+    });
   }
 }
 
 class Act {
-  constructor() {
+  constructor(act) {
+    this.name = act.name;
     this.scenes = [];
-  }
-  addScene() {
-    const scene = new Scene();
-    this.scenes.push(scene);
-  }
 
-  getScenes() {
-    return this.scenes;
+    act.scenes.forEach((scene) => {
+      this.scenes.push(new Scene(scene));
+    });
   }
-
-  renderScenes() {}
 }
-
 class Scene {
   constructor(speeches) {
-    this.speeches = speeches;
-  }
+    this.name = speeches.name;
+    this.speeches = [];
+    this.title = speeches.title;
+    this.stageDirection = speeches.stageDirection;
 
-  getSpeeches() {
-    return this.speeches;
+    speeches.speeches.forEach((speech) => {
+      this.speeches.push(speech);
+    });
   }
 }
 

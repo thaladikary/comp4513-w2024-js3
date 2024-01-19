@@ -19,7 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
   let actSelector = document.querySelector("#actList");
   let sceneSelector = document.querySelector("#sceneList");
   let playerSelector = document.querySelector("#playerList");
-  let playHereSection = document.querySelector("#playHere");
+
+  let playHereSection = document.getElementById("playHere");
+  // let playHereSection = document.querySelector("#playHere");
   let actHereArticle = document.querySelector("#actHere");
   populatePlaySelector(LIST_OF_PLAYS);
   document.querySelector("#playList").addEventListener("change", (e) => {
@@ -37,33 +39,97 @@ document.addEventListener("DOMContentLoaded", function () {
     populateActSelector(jsonResp, actSelector);
     populatePlayersSelector(jsonResp);
     listenForActChange(jsonResp); //for changing scene options depending on selected act
-    renderPlayTitle(jsonResp.title);
-    renderActInformation(jsonResp);
   }
 
-  async function renderActInformation(data) {
-    //<h3>Act name here</h3>
-    let listOfActs = [];
+  async function renderActInformation(data, selectedAct, selectedScene) {
+    let newPlay = new Play(data);
+    console.log(newPlay);
+    // console.log(data);
 
-    for (const act of data.acts) {
-      let newAct = new Act(act.name);
-      listOfActs.push(newAct);
-    }
-    let newPlay = new Play(listOfActs);
-    console.log(listOfActs);
-  }
+    playHereSection.replaceChildren();
 
-  function renderPlayTitle(title) {
-    removeChildren(playHereSection);
-    let h2Title = document.createElement("h2");
-    h2Title.appendChild(document.createTextNode(title));
-    playHereSection.appendChild(h2Title);
+    //render title here
+    let playTitleH2 = document.createElement("h2");
+    playTitleH2.appendChild(document.createTextNode(newPlay.title));
+    playHereSection.appendChild(playTitleH2);
+
+    let actTitleH3 = document.createElement("h3");
+    //sceneSelector.value --> get current scene
+    //actSelector.value --> get current act
+
+    let getDataForCurrAct = newPlay.acts.find(
+      (act) => act.name === selectedAct
+    );
+
+    let getDataForCurrScene = getDataForCurrAct.scenes.find(
+      (scene) => scene.name === selectedScene
+    );
+
+    //ACT NAME
+    actTitleH3.appendChild(document.createTextNode(getDataForCurrAct.name));
+    playHereSection.appendChild(actTitleH3);
+
+    //SCENE NAME
+    let sceneNameH4 = document.createElement("h4");
+    sceneNameH4.appendChild(document.createTextNode(getDataForCurrScene.name));
+    playHereSection.appendChild(sceneNameH4);
+
+    //SCENE DIV
+
+    let sceneDiv = document.createElement("div");
+
+    //SCENE TITLE
+
+    let sceneTitleP = document.createElement("p");
+    sceneTitleP.appendChild(document.createTextNode(getDataForCurrScene.title));
+    sceneTitleP.className = "title";
+    sceneDiv.appendChild(sceneTitleP);
+
+    //SCENE DIRECTION
+    let sceneDirectionP = document.createElement("p");
+    sceneDirectionP.appendChild(
+      document.createTextNode(getDataForCurrScene.stageDirection)
+    );
+    sceneDirectionP.className = "direction";
+    sceneDiv.appendChild(sceneDirectionP);
+
+    //SPEECH DIV
+
+    getDataForCurrScene.speeches.forEach((speech) => {
+      let speechDiv = document.createElement("div");
+      let speakerSpan = document.createElement("span");
+      let lineP = document.createElement("p");
+
+      speakerSpan.appendChild(document.createTextNode(speech.speaker));
+
+      lineP.appendChild(document.createTextNode(speech.lines));
+
+      speechDiv.appendChild(speakerSpan);
+      speechDiv.appendChild(lineP);
+      sceneDiv.appendChild(speechDiv);
+    });
+
+    // playHereSection.appendChild(speechDiv);
+    playHereSection.appendChild(sceneDiv);
+
+    console.log(getDataForCurrAct);
+    console.log(getDataForCurrScene);
   }
 
   function listenForActChange(data) {
+    const selectedScene = sceneSelector.value;
+    populateSceneSelector(data, actSelector.value);
+    renderActInformation(data, actSelector.value, sceneSelector.value);
+
     actSelector.addEventListener("change", (e) => {
       const selectedAct = e.target.value;
-      populateSceneSelector(data, selectedAct);
+
+      populateSceneSelector(data, actSelector.value); //populate the selector
+      renderActInformation(data, actSelector.value, sceneSelector.value); //populate the main section with act info
+    });
+    sceneSelector.addEventListener("change", (e) => {
+      const selectedScene = e.target.value;
+      renderActInformation(data, actSelector.value, sceneSelector.value);
     });
   }
 
@@ -114,7 +180,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function populatePlaySelector(listOfPlays) {
-    playSelector.appendChild(document.createElement("option")); //default empty option
     listOfPlays.forEach((play) => {
       let optionNode = document.createElement("option");
       let textNode = document.createTextNode(play);
