@@ -18,6 +18,7 @@ body {
    font-weight: 400;
    font-size: 1.2rem;
 }
+
 header {
    background-color: var(--header-bg-color);
    color: var(--header-text-color);
@@ -77,9 +78,11 @@ p.direction {
 .speech p {
    margin: 0;
 }
+
 .speech p b {
    background-color: yellow;
 }
+
 .speech em {
    font-style: italic;
    display: block;

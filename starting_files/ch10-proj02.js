@@ -1,11 +1,10 @@
-import { Play, Act, Scene } from "./play-module.js";
+import { Play } from "./play-module.js";
 
 document.addEventListener("DOMContentLoaded", function () {
   const LIST_OF_PLAYS = ["Hamlet", "Julius Caesar"];
   const API_URL =
     "https://www.randyconnolly.com//funwebdev/3rd/api/shakespeare/play.php";
   let queryString = "";
-  let playData = [];
 
   /*
      To get a specific play, add play name via query string, 
@@ -19,9 +18,12 @@ document.addEventListener("DOMContentLoaded", function () {
   let actSelector = document.querySelector("#actList");
   let sceneSelector = document.querySelector("#sceneList");
   let playerSelector = document.querySelector("#playerList");
+  let playerFilterBtn = document.querySelector("#btnHighlight");
 
   let playHereSection = document.getElementById("playHere");
   // let playHereSection = document.querySelector("#playHere");
+
+  let playerInputFilter = document.querySelector("#txtHighlight");
   let actHereArticle = document.querySelector("#actHere");
   populatePlaySelector(LIST_OF_PLAYS);
   document.querySelector("#playList").addEventListener("change", (e) => {
@@ -43,8 +45,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function renderActInformation(data, selectedAct, selectedScene) {
     let newPlay = new Play(data);
-    console.log(newPlay);
-    // console.log(data);
 
     playHereSection.replaceChildren();
 
@@ -78,42 +78,135 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let sceneDiv = document.createElement("div");
 
+    //SPEECH DIV
+
+    displaySceneInformation(getDataForCurrScene, sceneDiv);
+
+    // playHereSection.appendChild(speechDiv);
+    playHereSection.appendChild(sceneDiv);
+
+    playerSearch(getDataForCurrScene, sceneDiv);
+  }
+
+  //display  scene information
+  function displaySceneInformation(
+    sceneData,
+    sceneDiv,
+    typedInValue,
+    foundPlayerMatches
+  ) {
+    sceneDiv.replaceChildren();
     //SCENE TITLE
+    // console.log(foundPlayerMatches);
 
     let sceneTitleP = document.createElement("p");
-    sceneTitleP.appendChild(document.createTextNode(getDataForCurrScene.title));
+    sceneTitleP.appendChild(document.createTextNode(sceneData.title));
     sceneTitleP.className = "title";
     sceneDiv.appendChild(sceneTitleP);
 
     //SCENE DIRECTION
     let sceneDirectionP = document.createElement("p");
     sceneDirectionP.appendChild(
-      document.createTextNode(getDataForCurrScene.stageDirection)
+      document.createTextNode(sceneData.stageDirection)
     );
     sceneDirectionP.className = "direction";
     sceneDiv.appendChild(sceneDirectionP);
 
-    //SPEECH DIV
+    //for spacing
+    let blankP = document.createElement("p");
+    sceneDiv.appendChild(blankP);
 
-    getDataForCurrScene.speeches.forEach((speech) => {
-      let speechDiv = document.createElement("div");
-      let speakerSpan = document.createElement("span");
-      let lineP = document.createElement("p");
+    //if being called by the filter btn listener
 
-      speakerSpan.appendChild(document.createTextNode(speech.speaker));
+    if (foundPlayerMatches) {
+      foundPlayerMatches.forEach((speech) => {
+        let speechDiv = document.createElement("div");
+        let speakerSpan = document.createElement("span");
+        let lineP = document.createElement("p");
+        let boldtag = document.createElement("b");
 
-      lineP.appendChild(document.createTextNode(speech.lines));
+        speakerSpan.appendChild(document.createTextNode(speech.speaker));
 
-      speechDiv.appendChild(speakerSpan);
-      speechDiv.appendChild(lineP);
-      sceneDiv.appendChild(speechDiv);
+        boldtag.appendChild(speakerSpan);
+        lineP.appendChild(document.createTextNode(speech.lines));
+
+        speechDiv.className = "speechDiv";
+
+        speechDiv.appendChild(boldtag);
+        speechDiv.appendChild(lineP);
+        sceneDiv.appendChild(speechDiv);
+      });
+      highlightWords(typedInValue);
+    } else {
+      sceneData.speeches.forEach((speech) => {
+        let speechDiv = document.createElement("div");
+        let speakerSpan = document.createElement("span");
+        let lineP = document.createElement("p");
+        let boldtag = document.createElement("b");
+
+        speakerSpan.appendChild(document.createTextNode(speech.speaker));
+
+        boldtag.appendChild(speakerSpan);
+        lineP.appendChild(document.createTextNode(speech.lines));
+
+        speechDiv.className = "speechDiv";
+
+        speechDiv.appendChild(boldtag);
+        speechDiv.appendChild(lineP);
+        sceneDiv.appendChild(speechDiv);
+      });
+    }
+  }
+
+  function highlightWords(typedInValue) {
+    let div = document.querySelectorAll(".speechDiv p");
+
+    div.forEach((paragraph) => {
+      let pText = paragraph.textContent;
+      const words = pText.split(" ");
+      console.log(words);
+
+      const highlightWords = words.map((word) => {
+        if (word.toLowerCase() == typedInValue.toLowerCase()) {
+          console.log(word);
+          return `<b style="background-color: yellow">${word}</b>`;
+        } else {
+          return word;
+        }
+      });
+
+      const resultingWords = highlightWords.join(" ");
+
+      paragraph.innerHTML = resultingWords;
+    });
+  }
+
+  function playerSearch(sceneData, sceneDiv) {
+    //to clear array when user is trying to serach for another player
+    let foundPlayerMatches = [];
+
+    let foundWordMatches = [];
+    playerSelector.addEventListener("click", () => {
+      foundPlayerMatches = [];
     });
 
-    // playHereSection.appendChild(speechDiv);
-    playHereSection.appendChild(sceneDiv);
+    playerFilterBtn.addEventListener("click", () => {
+      foundPlayerMatches = [];
+      foundWordMatches = [];
+      sceneData.speeches.forEach((speech) => {
+        if (speech.speaker === playerSelector.value) {
+          foundPlayerMatches.push(speech);
+        }
+      });
+      let typedInValue = playerInputFilter.value.toLowerCase();
 
-    console.log(getDataForCurrAct);
-    console.log(getDataForCurrScene);
+      displaySceneInformation(
+        sceneData,
+        sceneDiv,
+        typedInValue,
+        foundPlayerMatches
+      );
+    });
   }
 
   function listenForActChange(data) {
